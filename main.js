@@ -11,23 +11,22 @@ const rl = readline.createInterface({
 });
 
 const header = () => {
-    console.log(chalk.green(` 
-    		      %%%,%%%%%%%
-		       ,'%% \\-*%%%%%%%
-		 ;%%%%%*%   _%%%%"
-		  ,%%%       \(_.*%%%%.
-		  % *%%, ,%%%%*(    '
-		%^     ,*%%% )\|,%%*%,_
-		     *%    \/ #).-"*%%*
-		         _.) ,/ *%,
-		          /)#(     
-    `));
-    console.log(chalk.green(`bonsai cli - demo`));
-    console.log(chalk.green('1 - start tasks\n2 - test webhook\n3 - exit'));
+    console.log(chalk.yellow(`
+    ******                  **                                    **                 **  
+   /*////**                /**                            **   **/**                /**  
+   /*   /**  **   ** ******/**       *****  ****** ******//** ** /**       ******  ******
+   /******  /**  /**//**//*/******  **///**//**//*//**//* //***  /******  **////**///**/ 
+   /*//// **/**  /** /** / /**///**/******* /** /  /** /   /**   /**///**/**   /**  /**  
+   /*    /**/**  /** /**   /**  /**/**////  /**    /**     **    /**  /**/**   /**  /**  
+   /******* //******/***   /****** //******/***   /***    **     /****** //******   //** 
+   ///////   ////// ///    /////    ////// ///    ///    //      /////    //////     //  
+   `));
+    console.log(chalk.yellow(`burberrybot - written by https://github.com/B75571`));
+    console.log(chalk.yellow('1 - start tasks\n2 - test webhook\n3 - exit'));
 };
 
 const menu = () => {
-    rl.question(chalk.green('choose an option: '), async option => {
+    rl.question(chalk.yellow('choose an option: '), async option => {
         switch(true){
             case option == 1:
                 terminal.set();
@@ -35,7 +34,7 @@ const menu = () => {
                 await startTasks();
                 break;
             case option == 2: {
-                console.log(chalk.green(`webhook sent`));
+                console.log(chalk.yellow(`webhook sent`));
                 webhooks.testWebhook();
                 menu();
                 break;

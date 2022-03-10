@@ -1,22 +1,18 @@
-//find out how  to import the fancy way
 const randomstring = require('randomstring');
 const Profile = require('../lib/profile');
 const Terminal = require('../lib/terminal');
 const Webhooks = require('../lib/webhooks');
 const { getProxy, getAgent } = require('../lib/proxy');
-//const Notifications = require('../../lib/notifications');
 const { encryptCardNumber, encryptCardMonth, encryptCardYear, encryptCardCVV } = require('./adyen');
 const { getSizes, getProductURL, getBurberryID } = require('./parse');
 const { getState } = require('./shipping');
 const { status } = require('../lib/status');
 const { CookieJar } = require('tough-cookie');
 const { HttpProxyAgent, HttpsProxyAgent } = require('hpagent');
-//const { logError } = require('../../lib/errors');
 const got = require('got');
 
 const terminal = new Terminal;
 const webhooks = new Webhooks;
-//const notifications = new Notifications();
 
 class Normal {
     constructor(taskDetails, profile, delays){
@@ -24,7 +20,6 @@ class Normal {
         this.input = taskDetails.input.toString();
         this.productURL = getProductURL(this.input);
         this.desiredSize = taskDetails.size;
-        this.quantity = taskDetails.quantity;
         this.captcha = taskDetails.captcha;
         this.delays = delays;
         this.profile = new Profile(profile);
@@ -48,7 +43,7 @@ class Normal {
 
     start(){
         terminal.addTask();
-        status(this.id, 'us.burberry.com', 'normal', `Starting Task - ${this.profile.getProfileName()} - ${this.input}`, 'precheckout');
+        status(this.id, 'normal', `Starting Task - ${this.profile.getProfileName()} - ${this.input}`, 'precheckout');
         this.controller('getBurberry');
     };
 
@@ -66,7 +61,7 @@ class Normal {
                 if(error.message.includes('Stop'))
                     throw new Error('Task Stopped');
                 if(error.message)
-                    status(this.id, 'us.burberry.com', 'normal', error.message, error.type);
+                    status(this.id, 'normal', error.message, error.type);
                 setTimeout(() => {
                     this.controller(this.next);
                 }, error.interval);
@@ -78,7 +73,7 @@ class Normal {
 
     getBurberry(){
         return new Promise((resolve, reject) => {
-            status(this.id, 'us.burberry.com', 'normal', `Getting Session (1/2)`, `precheckout`);
+            status(this.id, 'normal', `Getting Session (1/2)`, `precheckout`);
 
             got(`https://api.burberry.com/web-api-proxy/user-session`, {
                 headers: {
@@ -117,7 +112,6 @@ class Normal {
                     switch(true){
                         case statusCode >= 300 && statusCode <= 399:
                         case statusCode >= 401 && statusCode <= 403: {
-                            //logError(statusCode, JSON.stringify(response.body), this.next);
                             this.rotateProxy();
                             reject({ message: 'Proxy Banned Getting Session (1/2), Rotating Proxy', interval: this.delays.error, type: 'error'});
                             break;
@@ -132,7 +126,6 @@ class Normal {
                             reject({ message: 'Server Error Getting Session (1/2), Retrying', interval: this.delays.error, type: 'error'});
                             break;
                         default: {
-                            //logError(statusCode, JSON.stringify(response.body), this.next);
                             reject({ message: `Unknown Error Getting Session (1/2) (${statusCode}), Retrying`, interval: this.delays.error, type: 'error' });
                             break;
                         };
@@ -144,7 +137,7 @@ class Normal {
 
     getUser(){
         return new Promise((resolve, reject) => {
-            status(this.id, 'us.burberry.com', 'normal', `Getting Session (2/2)`, `precheckout`);
+            status(this.id, 'normal', `Getting Session (2/2)`, `precheckout`);
 
             got.post(`https://api.burberry.com/web-api-proxy/user-session`, {
                 headers: {
@@ -182,7 +175,6 @@ class Normal {
                     switch(true){
                         case statusCode >= 300 && statusCode <= 399:
                         case statusCode >= 401 && statusCode <= 403: {
-                            //logError(statusCode, JSON.stringify(response.body), this.next);
                             this.rotateProxy();
                             reject({ message: 'Proxy Banned Getting Session (2/2), Rotating Proxy', interval: this.delays.error, type: 'error'});
                             break;
@@ -197,7 +189,6 @@ class Normal {
                             reject({ message: 'Server Error Getting Session (2/2), Retrying', interval: this.delays.error, type: 'error'});
                             break;
                         default: {
-                            //logError(statusCode, JSON.stringify(response.body), this.next);
                             reject({ message: `Unknown Error Getting Session (2/2) (${statusCode}), Retrying`, interval: this.delays.error, type: 'error' });
                             break;
                         };
@@ -209,7 +200,7 @@ class Normal {
 
     getSizes(){
         return new Promise((resolve, reject) => {
-            status(this.id, 'us.burberry.com', 'normal', `Getting Sizes`, 'precheckout');
+            status(this.id, 'normal', `Getting Sizes`, 'precheckout');
 
             got(`https://us.burberry.com/web-api/pages?pagePath=%2F${this.productURL}&country=US&language=en`, {
                 headers: {
@@ -262,7 +253,6 @@ class Normal {
                     switch(true){
                         case statusCode >= 300 && statusCode <= 399:
                         case statusCode >= 401 && statusCode <= 403: {
-                            //logError(statusCode, JSON.stringify(response.body), this.next);
                             this.rotateProxy();
                             reject({ message: 'Proxy Banned Getting Sizes, Rotating Proxy', interval: this.delays.error, type: 'error'});
                             break;
@@ -277,7 +267,6 @@ class Normal {
                             reject({ message: 'Server Error Getting Sizes, Retrying', interval: this.delays.error, type: 'error'});
                             break;
                         default: {
-                            //logError(statusCode, JSON.stringify(response.body), this.next);
                             reject({ message: `Unknown Error Getting Sizes (${statusCode}), Retrying`, interval: this.delays.error, type: 'error' });
                             break;
                         };
@@ -295,7 +284,7 @@ class Normal {
                 label = 'N/A';
             };
 
-            status(this.id, 'us.burberry.com', 'normal', `Adding To Cart (${label})`, 'precheckout');
+            status(this.id, 'normal', `Adding To Cart (${label})`, 'precheckout');
 
             let payload = JSON.stringify({
                 "product_id": this.pid,
@@ -339,8 +328,8 @@ class Normal {
                         url: `https://us.burberry.com${cart.items[0].productUrl}`
                     };
                     terminal.addCart();
-                    webhooks.footsCart(this.id, this.input, 'Burberry US', 'Normal', this.product, this.profile.getProfileName());
-                    status(this.id, 'us.burberry.com', 'normal', `Item Carted - ${this.product.name} (${this.product.size})`, 'success');
+                    webhooks.cart(this.id, this.input, 'Burberry US', 'Normal', this.product, this.profile.getProfileName());
+                    status(this.id, 'normal', `Item Carted - ${this.product.name} (${this.product.size})`, 'success');
                     resolve('getCiam');
                 }
                 else
@@ -355,7 +344,6 @@ class Normal {
                     switch(true){
                         case statusCode >= 300 && statusCode <= 399:
                         case statusCode >= 401 && statusCode <= 403: {
-                            //logError(statusCode, JSON.stringify(response.body), this.next);
                             this.rotateProxy();
                             reject({ message: 'Proxy Banned Adding To Cart, Rotating Proxy', interval: this.delays.error, type: 'error'});
                             break;
@@ -370,7 +358,6 @@ class Normal {
                             reject({ message: 'Server Error Adding To Cart, Retrying', interval: this.delays.error, type: 'error'});
                             break;
                         default: {
-                            //logError(statusCode, JSON.stringify(response.body), this.next);
                             reject({ message: `Unknown Error Adding To Cart (${statusCode}), Retrying`, interval: this.delays.error, type: 'error' });
                             break;
                         };
@@ -382,7 +369,7 @@ class Normal {
 
     getCiam(){
         return new Promise((resolve, reject) => {
-            status(this.id, 'us.burberry.com', 'normal', `Generating Auth Token`, 'precheckout');
+            status(this.id, 'normal', `Generating Auth Token`, 'precheckout');
 
             let payload = JSON.stringify({
                 "forceUpdate": false
@@ -422,7 +409,6 @@ class Normal {
                     switch(true){
                         case statusCode >= 300 && statusCode <= 399:
                         case statusCode >= 401 && statusCode <= 403: {
-                            //logError(statusCode, JSON.stringify(response.body), this.next);
                             this.rotateProxy();
                             reject({ message: 'Proxy Banned Generating Auth Token, Rotating Proxy', interval: this.delays.error, type: 'error'});
                             break;
@@ -437,7 +423,6 @@ class Normal {
                             reject({ message: 'Server Error Generating Auth Token, Retrying', interval: this.delays.error, type: 'error'});
                             break;
                         default: {
-                            //logError(statusCode, JSON.stringify(response.body), this.next);
                             reject({ message: `Unknown Error Generating Auth Token (${statusCode}), Retrying`, interval: this.delays.error, type: 'error' });
                             break;
                         };
@@ -449,7 +434,7 @@ class Normal {
 
     getCheckout(){
         return new Promise((resolve, reject) => {
-            status(this.id, 'us.burberry.com', 'normal', 'Getting Checkout', 'precheckout');
+            status(this.id, 'normal', 'Getting Checkout', 'precheckout');
             got('https://us.burberry.com/checkout-api/shopping-bag?country=US&language=en', {
                 headers: {
                     'authority': 'us.burberry.com',
@@ -486,7 +471,6 @@ class Normal {
                     switch(true){
                         case statusCode >= 300 && statusCode <= 399:
                         case statusCode >= 401 && statusCode <= 403: {
-                            //logError(statusCode, JSON.stringify(response.body), this.next);
                             this.rotateProxy();
                             reject({ message: 'Proxy Banned Getting Checkout, Rotating Proxy', interval: this.delays.error, type: 'error'});
                             break;
@@ -501,7 +485,6 @@ class Normal {
                             reject({ message: 'Server Error Getting Checkout, Retrying', interval: this.delays.error, type: 'error'});
                             break;
                         default: {
-                            //logError(statusCode, JSON.stringify(response.body), this.next);
                             reject({ message: `Unknown Error Getting Checkout (${statusCode}), Retrying`, interval: this.delays.error, type: 'error' });
                             break;
                         };
@@ -513,7 +496,7 @@ class Normal {
 
     submitEmail(){
         return new Promise((resolve, reject) => {
-            status(this.id, 'us.burberry.com', 'normal', 'Submitting Email', 'submitting');
+            status(this.id, 'normal', 'Submitting Email', 'submitting');
 
             let payload = JSON.stringify({
                 "email": this.profile.getEmail(),
@@ -558,7 +541,6 @@ class Normal {
                     switch(true){
                         case statusCode >= 300 && statusCode <= 399:
                         case statusCode >= 401 && statusCode <= 403: {
-                            //logError(statusCode, JSON.stringify(response.body), this.next);
                             this.rotateProxy();
                             reject({ message: 'Proxy Banned Submitting Email, Rotating Proxy', interval: this.delays.error, type: 'error'});
                             break;
@@ -573,7 +555,6 @@ class Normal {
                             reject({ message: 'Server Error Submitting Email, Retrying', interval: this.delays.error, type: 'error'});
                             break;
                         default: {
-                            //logError(statusCode, JSON.stringify(response.body), this.next);
                             reject({ message: `Unknown Error Submitting Email (${statusCode}), Retrying`, interval: this.delays.error, type: 'error' });
                             break;
                         };
@@ -585,7 +566,7 @@ class Normal {
 
     submitCart(){
         return new Promise((resolve, reject) => {
-            status(this.id, 'us.burberry.com', 'normal', 'Submitting Cart', 'submitting');
+            status(this.id, 'normal', 'Submitting Cart', 'submitting');
 
             let payload = JSON.stringify({
                 "shoppingBag": {
@@ -644,7 +625,6 @@ class Normal {
                     switch(true){
                         case statusCode >= 300 && statusCode <= 399:
                         case statusCode >= 401 && statusCode <= 403: {
-                            //logError(statusCode, JSON.stringify(response.body), this.next);
                             this.rotateProxy();
                             reject({ message: 'Proxy Banned Submitting Cart, Rotating Proxy', interval: this.delays.error, type: 'error'});
                             break;
@@ -659,7 +639,6 @@ class Normal {
                             reject({ message: 'Server Error Submitting Cart, Retrying', interval: this.delays.error, type: 'error'});
                             break;
                         default: {
-                            //logError(statusCode, JSON.stringify(response.body), this.next);
                             reject({ message: `Unknown Error Submitting Cart (${statusCode}), Retrying`, interval: this.delays.error, type: 'error' });
                             break;
                         };
@@ -671,7 +650,7 @@ class Normal {
 
     submitShipping(){
         return new Promise((resolve, reject) => {
-            status(this.id, 'us.burberry.com', 'normal', `Submitting Shipping`, 'submitting');
+            status(this.id, 'normal', `Submitting Shipping`, 'submitting');
 
             let payload = JSON.stringify({
                 "address": {
@@ -729,7 +708,6 @@ class Normal {
 
                     switch(true){
                         case statusCode >= 401 && statusCode <= 403: {
-                            //logError(statusCode, JSON.stringify(response.body), this.next);
                             this.rotateProxy();
                             reject({ message: 'Proxy Banned Submitting Shipping, Rotating Proxy', interval: this.delays.error, type: 'error'});
                             break;
@@ -744,7 +722,6 @@ class Normal {
                             reject({ message: 'Server Error Submitting Shipping, Retrying', interval: this.delays.error, type: 'error'});
                             break;
                         default: {
-                            //logError(statusCode, JSON.stringify(response.body), this.next);
                             reject({ message: `Unknown Error Submitting Shipping (${statusCode}), Retrying`, interval: this.delays.error, type: 'error' });
                             break;
                         };
@@ -756,7 +733,7 @@ class Normal {
 
     getDelivery(){
         return new Promise((resolve, reject) => {
-            status(this.id, 'us.burberry.com', 'normal', `Getting Delivery Option`, 'submitting');
+            status(this.id, 'normal', `Getting Delivery Option`, 'submitting');
 
             got(`https://us.burberry.com/checkout-api/delivery-options?cartId=${this.cartID}&countryCode=US&country=US&language=en`, {
                 headers: {
@@ -794,7 +771,6 @@ class Normal {
                     switch(true){
                         case statusCode >= 300 && statusCode <= 399:
                         case statusCode >= 401 && statusCode <= 403: {
-                            //logError(statusCode, JSON.stringify(response.body), this.next);
                             this.rotateProxy();
                             reject({ message: 'Proxy Banned Getting Delivery Option, Rotating Proxy', interval: this.delays.error, type: 'error'});
                             break;
@@ -809,7 +785,6 @@ class Normal {
                             reject({ message: 'Server Error Getting Delivery Option, Retrying', interval: this.delays.error, type: 'error'});
                             break;
                         default: {
-                            //logError(statusCode, JSON.stringify(response.body), this.next);
                             reject({ message: `Unknown Error Getting Delivery Option (${statusCode}), Retrying`, interval: this.delays.error, type: 'error' });
                             break;
                         };
@@ -821,7 +796,7 @@ class Normal {
 
     submitDelivery(){
         return new Promise((resolve, reject) => {
-            status(this.id, 'us.burberry.com', 'normal', `Submitting Delivery Option`, 'submitting');
+            status(this.id, 'normal', `Submitting Delivery Option`, 'submitting');
 
             let payload = JSON.stringify({
                 "shippingOption": this.shippingOption,
@@ -869,7 +844,6 @@ class Normal {
                     switch(true){
                         case statusCode >= 300 && statusCode <= 399:
                         case statusCode >= 401 && statusCode <= 403: {
-                            //logError(statusCode, JSON.stringify(response.body), this.next);
                             this.rotateProxy();
                             reject({ message: 'Proxy Banned Submitting Delivery Option, Rotating Proxy', interval: this.delays.error, type: 'error'});
                             break;
@@ -884,7 +858,6 @@ class Normal {
                             reject({ message: 'Server Error Submitting Delivery Option, Retrying', interval: this.delays.error, type: 'error'});
                             break;
                         default: {
-                            //logError(statusCode, JSON.stringify(response.body), this.next);
                             reject({ message: `Unknown Error Submitting Delivery Option (${statusCode}), Retrying`, interval: this.delays.error, type: 'error' });
                             break;
                         };
@@ -896,7 +869,7 @@ class Normal {
 
     submitCheckout(){
         return new Promise((resolve, reject) => {
-            status(this.id, 'us.burberry.com', 'normal', `Submitting Checkout`, 'processing');
+            status(this.id, 'normal', `Submitting Checkout`, 'processing');
 
             let payload = JSON.stringify({
                 "paymentMethod": {
@@ -1012,15 +985,13 @@ class Normal {
                             let reason = response.body.details.message;
                             terminal.subCart();
                             terminal.addFailed();
-                            //notifications.failed(this.product);
-                            webhooks.footsFailed(reason, this.id, this.input, 'Burberry US', 'Normal', this.product, this.profile.getProfileName(), this.proxy);
-                            status(this.id, 'us.burberry.com', 'normal', `Checkout Failed - ${reason}`, 'failed');
+                            webhooks.failed(reason, this.id, this.input, 'Burberry US', 'Normal', this.product, this.profile.getProfileName(), this.proxy);
+                            status(this.id, 'normal', `Checkout Failed - ${reason}`, 'failed');
                             reject({ message: 'Stop' });
                             break;
                         };
                         case statusCode >= 300 && statusCode <= 399:
                         case statusCode >= 401 && statusCode <= 403: {
-                            //logError(statusCode, JSON.stringify(response.body), this.next);
                             this.rotateProxy();
                             reject({ message: 'Proxy Banned Submitting Checkout, Rotating Proxy', interval: this.delays.error, type: 'error'});
                             break;
@@ -1035,7 +1006,6 @@ class Normal {
                             reject({ message: 'Server Error Submitting Checkout, Retrying', interval: this.delays.error, type: 'error'});
                             break;
                         default: {
-                            //logError(statusCode, JSON.stringify(response.body), this.next);
                             reject({ message: `Unknown Error Submitting Checkout (${statusCode}), Retrying`, interval: this.delays.error, type: 'error' });
                             break;
                         };
@@ -1047,7 +1017,7 @@ class Normal {
 
     stop(){
         terminal.subTask();
-        status(this.id, 'us.burberry.com', 'normal', 'Task Stopped', 'error');
+        status(this.id, 'normal', 'Task Stopped', 'error');
     };
 };
 
