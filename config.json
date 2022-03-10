@@ -1,0 +1,12 @@
+[
+    {
+        "webhooks": {
+            "success": "https://discordapp.com/api/webhooks/925186821871267853/FEiY4zSFbVTEzpvNfc0L9Y9-O9B73ihCDTvf8U7v4QV1OqMnn-w2m8W62itnFq0Z1A9Q",
+            "failed": "https://discord.com/api/webhooks/925186821871267853/FEiY4zSFbVTEzpvNfc0L9Y9-O9B73ihCDTvf8U7v4QV1OqMnn-w2m8W62itnFq0Z1A9Q",
+            "cart": "https://discord.com/api/webhooks/925186821871267853/FEiY4zSFbVTEzpvNfc0L9Y9-O9B73ihCDTvf8U7v4QV1OqMnn-w2m8W62itnFq0Z1A9Q",
+            "sendCart": true,
+            "sendFailed": true,
+            "sendToGlobal": false
+        }
+    }
+]

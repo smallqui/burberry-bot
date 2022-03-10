@@ -1,0 +1,32 @@
+{
+  "name": "demo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "build": "pkg main.js"
+  },
+  "pkg": {
+    "scripts": [ "src/**/*.js", "lib/**/*.js"],
+    "targets": [ "node16-win-x64" ]
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "country-and-province": "^2.0.0",
+    "csv-parser": "^3.0.0",
+    "discord.js": "^13.4.0",
+    "got": "^11.8.2",
+    "hpagent": "^0.1.2",
+    "nexe": "^4.0.0-beta.19",
+    "node-adyen-encrypt": "^2.3.1",
+    "pkg": "^5.5.2",
+    "randomstring": "^1.2.2",
+    "set-terminal-title": "^1.0.1",
+    "tough-cookie": "^4.0.0"
+  }
+}
