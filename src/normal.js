@@ -971,8 +971,12 @@ class Normal {
                 cookieJar: this.cookieJar,
                 responseType: 'json'
             })
-            .then(({ body }) => {
-                console.log(body);
+            .then(() => {
+                terminal.subCart();
+                terminal.addCheckouts();
+                webhooks.success(this.id, this.input, 'Burberry US', 'Normal', this.product, this.profile.getProfileName(), this.proxy);
+                status(this.id, 'normal', `Checkout Successful - ${this.product.name} (${this.product.size})`);
+                reject({ message: 'Stop' });
             })
             .catch(({ response }) => {
                 if(!response || response == undefined)
